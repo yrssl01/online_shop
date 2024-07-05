@@ -1,3 +1,7 @@
+import pdfkit
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from django.contrib.staticfiles import finders
 from django.contrib.admin.views.decorators import staff_member_required
 from cart.cart import Cart
 from django.shortcuts import render, redirect, get_object_or_404
@@ -24,6 +28,7 @@ def order_create(request):
             cart.clear()
             order_created.delay(order.id)
             request.session['order_id'] = order.id
+
             return redirect('payment:process')
     else:
         form = OrderCreateForm()
@@ -42,3 +47,14 @@ def admin_order_detail(request, order_id):
         'admin/orders/order/detail.html',
         {'order': order}
     )
+
+
+@staff_member_required
+def admin_order_pdf(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    html = render_to_string('orders/order/pdf.html', {'order': order})
+    config = pdfkit.configuration(wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
+    pdf = pdfkit.from_string(html, False, configuration=config, css=finders.find('css/pdf.css'))
+    response = HttpResponse(pdf,  content_type='application/pdf')
+    response['Content-Disposition'] = f'filename=order_{order.id}.pdf'
+    return response
