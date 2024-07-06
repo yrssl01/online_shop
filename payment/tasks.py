@@ -22,10 +22,10 @@ def payment_completed(order_id):
     email = EmailMessage(
         subject, message, mail, [order.email]
     )
-    config = pdfkit.configuration(wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
+    # config = pdfkit.configuration(wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
     html = render_to_string('orders/order/pdf.html', {'order': order})
     css = finders.find('css/pdf.css')
-    pdf = pdfkit.from_string(html, False, configuration=config, css=css)
+    pdf = pdfkit.from_string(html, False, css=css)
     email.attach(
         f'order_{order_id}.pdf', pdf, 'application/pdf'
     )
